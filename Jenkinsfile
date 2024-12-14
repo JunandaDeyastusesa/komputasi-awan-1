@@ -10,7 +10,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 // Install dependencies menggunakan Ansible
-                sh 'ansible-galaxy install -r requirements.yml'
+                sh 'ansible-galaxy install -r requirements.yml --no-tty'
             }
         }
         stage('Run Ansible Playbook') {
