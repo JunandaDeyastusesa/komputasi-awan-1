@@ -1,2 +1,9 @@
-- src: geerlingguy.mysql
-  version: 3.3.0
+---
+roles:
+  - name: geerlingguy.mysql
+    version: 3.4.1
+  - name: geerlingguy.nginx
+    version: 3.0.0
+collections:
+  - name: community.mysql
+  - name: ansible.posix
