@@ -8,14 +8,13 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                // Gunakan bat jika Windows
-                bat 'ansible-galaxy install -r requirements.yml'
+                // Jalankan perintah melalui WSL
+                bat 'wsl ansible-galaxy install -r requirements.yml'
             }
         }
         stage('Run Ansible Playbook') {
             steps {
-                // Jika menjalankan playbook di Windows
-                bat 'ansible-playbook -i hosts playbooks/mariadb.yml'
+                bat 'wsl ansible-playbook -i hosts playbooks/mariadb.yml'
             }
         }
     }
