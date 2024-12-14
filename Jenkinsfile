@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                // Install dependencies menggunakan Ansible
+                // Install dependencies menggunakan Ansible tanpa menggunakan nohup
                 sh 'ansible-galaxy install -r requirements.yml --no-tty'
             }
         }
