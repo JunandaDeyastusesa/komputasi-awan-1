@@ -1,38 +1,43 @@
 ---
-- name: Install and configure MySQL
-  hosts: all
+- name: Deploy PHP Native Application
+  hosts: web_servers
   become: yes
   tasks:
-    - name: Install MySQL package
+    - name: Update apt cache
       apt:
-        name: mysql-server
+        update_cache: yes
+
+    - name: Install PHP and required extensions
+      apt:
+        name:
+          - php
+          - php-cli
+          - php-fpm
+          - php-mysql
+          - php-curl
+          - php-xml
         state: present
 
-    - name: Start and enable MySQL service
-      systemd:
-        name: mysql
+    - name: Ensure web server is installed (Apache in this case)
+      apt:
+        name: apache2
+        state: present
+
+    - name: Ensure Apache service is started and enabled
+      service:
+        name: apache2
         state: started
         enabled: yes
 
-    - name: Secure MySQL installation
-      shell: |
-        mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY 'your_root_password';"
-        mysql -e "DELETE FROM mysql.user WHERE User='';"
-        mysql -e "DROP DATABASE IF EXISTS test;"
-        mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-        mysql -e "FLUSH PRIVILEGES;"
-      args:
-        executable: /bin/bash
+    - name: Copy PHP application to the web server
+      copy:
+        src: /path/to/local/php-app/
+        dest: /var/www/html/
 
-    - name: Create a database
-      mysql_db:
-        name: mydatabase
-        state: present
-
-    - name: Create a database user
-      mysql_user:
-        name: myuser
-        password: 'mypassword'
-        priv: 'mydatabase.*:ALL'
-        host: "%"
-        state: present
+    - name: Set permissions for PHP files
+      file:
+        path: /var/www/html/
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes
