@@ -6,6 +6,13 @@ pipeline {
                 git 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
+        stage('Validate') {
+            steps {
+                script {
+                    sh 'ls -la'
+                }
+            }
+        }
         stage('Install Dependencies') {
             steps {
                 // Menginstal dependencies dari requirements.yml
