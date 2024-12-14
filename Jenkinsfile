@@ -3,20 +3,21 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'WDC-V2', credentialsId: 'github-credentials', url: 'https://github.com/JunandaDeyastusesa/Dashboard-MEC-1.git'
+                git 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Run Playbook') {
+        stage('Install Dependencies') {
             steps {
-                sh 'ansible-playbook -i hosts playbooks/mariadb.yml'
+                // Menginstal dependencies dari requirements.yml
+                sh 'ansible-galaxy install -r requirements.yml'
             }
         }
-
-        //stage('Run Ansible Playbook') {
-            //steps {
-                //ansiblePlaybook 'wsl ansible-playbook -i hosts playbooks/mariadb.yml'
-            //}
-       // }
+        stage('Run Ansible Playbook') {
+            steps {
+                // Menjalankan playbook dengan kredensial dan inventory yang benar
+                ansiblePlaybook inventory: 'hosts', playbook: 'playbooks/mariadb.yml'
+            }
+        }
     }
     post {
         success {
