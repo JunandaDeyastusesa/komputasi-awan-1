@@ -1,11 +1,6 @@
 pipeline {
     agent any
     stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
-            }
-        }
         stage('Validate') {
             steps {
                 script {
