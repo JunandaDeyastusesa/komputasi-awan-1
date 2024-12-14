@@ -1,32 +1,59 @@
 pipeline {
     agent any
+
+    environment {
+        ANSIBLE_HOST_KEY_CHECKING = 'false'  // Menonaktifkan pengecekan host key untuk SSH (optional)
+        ANSIBLE_INVENTORY = '/path/to/your/hosts' // Path ke file inventory
+        PLAYBOOK_PATH = '/path/to/your/playbook.yml' // Path ke playbook PHP
+        MYSQL_PLAYBOOK_PATH = '/path/to/your/mysql.yml' // Path ke playbook MySQL
+        ANSIBLE_USER = 'your_user'  // Ganti dengan username yang digunakan untuk SSH
+        ANSIBLE_SSH_KEY = credentials('your-ssh-key-id') // Pastikan SSH key disimpan di Jenkins
+    }
+
     stages {
-        stage('Validate') {
+        stage('Checkout') {
+            steps {
+                // Checkout kode dari repository GitHub
+                git branch: 'main', url: 'https://github.com/your-repository/your-php-app.git'
+            }
+        }
+
+        stage('Install Dependencies') {
             steps {
                 script {
-                    sh 'ls -la'
+                    // Install Ansible di Jenkins jika diperlukan
+                    sh 'sudo apt-get update'
+                    sh 'sudo apt-get install -y ansible'
                 }
             }
         }
-        stage('Install Dependencies') {
+
+        stage('Run MySQL Setup') {
             steps {
-                // Menginstal dependencies dari requirements.yml
-                sh 'ansible-galaxy install -r requirements.yml'
+                script {
+                    // Menjalankan playbook MySQL untuk mengonfigurasi database
+                    sh "ansible-playbook -i ${ANSIBLE_INVENTORY} ${MYSQL_PLAYBOOK_PATH} --user ${ANSIBLE_USER} --private-key ${ANSIBLE_SSH_KEY}"
+                }
             }
         }
-        stage('Run Ansible Playbook') {
+
+        stage('Deploy PHP Application') {
             steps {
-                // Menjalankan playbook dengan kredensial dan inventory yang benar
-                ansiblePlaybook inventory: 'hosts', playbook: 'playbooks/mariadb.yml'
+                script {
+                    // Menjalankan playbook PHP untuk meng-deploy aplikasi
+                    sh "ansible-playbook -i ${ANSIBLE_INVENTORY} ${PLAYBOOK_PATH} --user ${ANSIBLE_USER} --private-key ${ANSIBLE_SSH_KEY}"
+                }
             }
         }
     }
+
     post {
         success {
             echo 'Deployment successful!'
         }
+
         failure {
-            echo 'Deployment failed!'
+            echo 'Deployment failed.'
         }
     }
 }
