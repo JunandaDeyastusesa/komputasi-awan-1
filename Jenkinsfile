@@ -6,17 +6,17 @@ pipeline {
                 git branch: 'WDC-V2', credentialsId: 'github-credentials', url: 'https://github.com/JunandaDeyastusesa/Dashboard-MEC-1.git'
             }
         }
-        stage('Install Dependencies') {
-                steps {
-                    // Menginstal dependencies dari requirements.yml
-                    sh 'ansible-galaxy install -r requirements.yml'
-                }
-        }
-        stage('Run Ansible Playbook') {
+        stage('Run Playbook') {
             steps {
-                ansiblePlaybook 'wsl ansible-playbook -i hosts playbooks/mariadb.yml'
+                sh 'ansible-playbook -i hosts playbooks/mariadb.yml'
             }
         }
+
+        //stage('Run Ansible Playbook') {
+            //steps {
+                //ansiblePlaybook 'wsl ansible-playbook -i hosts playbooks/mariadb.yml'
+            //}
+       // }
     }
     post {
         success {
