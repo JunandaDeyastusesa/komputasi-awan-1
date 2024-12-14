@@ -3,7 +3,7 @@ pipeline {
  stages {
  stage('Clone Repository') {
  steps {
- git 'https://github.com/JunandaDeyastusesa/Dashboard-MEC-1.git'
+ git 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
  }
  }
  stage('Install Dependencies') {
