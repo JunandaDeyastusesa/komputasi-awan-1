@@ -3,7 +3,7 @@ pipeline {
  stages {
  stage('Clone Repository') {
  steps {
- git branch: 'WDC-V2', credentialsId: 'any', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+ git branch: 'WDC-V2', credentialsId: 'github-credentials', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
 
  }
  }
