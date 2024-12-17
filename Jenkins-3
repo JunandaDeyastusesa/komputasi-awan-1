@@ -4,8 +4,8 @@ pipeline {
         stage('Check Docker') {
             steps {
                 script {
-                    sh 'docker --version'
-                    sh 'docker run hello-world'
+                    bat 'docker --version'
+                    bat 'docker run hello-world'
                 }
             }
         }
