@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         ANSIBLE_HOST_KEY_CHECKING = 'false'  // Menonaktifkan pengecekan host key untuk SSH (optional)
-        ANSIBLE_INVENTORY = '/hosts' // Path ke file inventory
-        PLAYBOOK_PATH = '/requirement.yml' // Path ke playbook PHP
-        MYSQL_PLAYBOOK_PATH = '/playbooks/mariadb.yml' // Path ke playbook MySQL
+        ANSIBLE_INVENTORY = 'hosts' // Path ke file inventory
+        PLAYBOOK_PATH = 'requirement.yml' // Path ke playbook PHP
+        MYSQL_PLAYBOOK_PATH = 'playbooks/mariadb.yml' // Path ke playbook MySQL
         ANSIBLE_USER = 'juna'  // Ganti dengan username yang digunakan untuk SSH
         ANSIBLE_SSH_KEY = credentials('github-credentials') // Pastikan SSH key disimpan di Jenkins
     }
