@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'dashboard-mec-php-env'
+        CONTAINER_NAME = 'dashboard-mec'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo 'Checkout kode proyek...'
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Membangun image Docker...'
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                echo 'Menjalankan container Docker...'
+                sh 'docker run --name ${CONTAINER_NAME} -d ${DOCKER_IMAGE}'
+            }
+        }
+
+        stage('Show Container Logs') {
+            steps {
+                echo 'Menampilkan log dari container...'
+                sh 'docker logs ${CONTAINER_NAME}'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Membersihkan container...'
+            sh 'docker rm -f ${CONTAINER_NAME} || true'
+        }
+    }
+}
