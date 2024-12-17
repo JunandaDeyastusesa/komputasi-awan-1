@@ -1,11 +1,12 @@
 pipeline {
     agent any
     stages {
-        stage('Check Docker') {
+        stage('Check PATH') {
             steps {
                 script {
-                    bat 'docker --version'
-                    bat 'docker run hello-world'
+                    // Memeriksa path Git dan nohup
+                    sh 'echo $PATH'  // Untuk memastikan path Git ada di Jenkins
+                    sh 'nohup echo "Test" &'
                 }
             }
         }
