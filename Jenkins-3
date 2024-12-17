@@ -6,7 +6,7 @@ pipeline {
                 script {
                     // Memeriksa path Git dan nohup
                     sh 'echo $PATH'  // Untuk memastikan path Git ada di Jenkins
-                    sh 'nohup echo "Test" &'
+                    sh '"C:\\Program Files\\Git\\bin\\nohup.exe" echo "Test" &'
                 }
             }
         }
