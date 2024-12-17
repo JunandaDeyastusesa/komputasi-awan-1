@@ -14,24 +14,20 @@ pipeline {
             }
         }
 
-        stage('Checkout Code') {
-            steps {
-                echo 'Checkout kode proyek...'
-                checkout scm
-            }
-        }
-
         stage('Run Docker Container') {
             steps {
                 echo 'Menjalankan container Docker...'
-                sh 'docker run --name ${CONTAINER_NAME} -d ${DOCKER_IMAGE}'
+                sh '''
+                docker rm -f ${CONTAINER_NAME} || true
+                docker run --name ${CONTAINER_NAME} -d ${DOCKER_IMAGE}
+                '''
             }
         }
 
-        stage('Show Container Logs') {
+        stage('Show Build Logs') {
             steps {
-                echo 'Menampilkan log dari container...'
-                sh 'docker logs ${CONTAINER_NAME}'
+                echo 'Menampilkan log build secara real-time dari container...'
+                sh "docker logs -f ${CONTAINER_NAME}"
             }
         }
     }
