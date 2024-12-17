@@ -4,26 +4,11 @@ pipeline {
     environment {
         CONTAINER_NAME = "dashboard-mec"
         IMAGE_NAME = "dashboard-mec-php-env"
-        NGROK_AUTH_TOKEN = credentials('2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD') // Simpan token ngrok di Jenkins Credentials
+        NGROK_AUTH_TOKEN = credentials('ngrok-auth-token') // Simpan token ngrok di Jenkins Credentials
         LOCAL_PORT = "8080" // Ganti port sesuai aplikasi Anda
     }
 
     stages {
-        stage('Cleanup Existing Container') {
-            steps {
-                script {
-                    // Hentikan dan hapus container jika sudah ada
-                    sh """
-                    if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then
-                        echo "Stopping existing container..."
-                        docker stop ${CONTAINER_NAME}
-                        docker rm ${CONTAINER_NAME}
-                    fi
-                    """
-                }
-            }
-        }
-
         stage('Run Docker Container') {
             steps {
                 script {
@@ -31,23 +16,6 @@ pipeline {
                     sh """
                     echo "Starting Docker container ${CONTAINER_NAME}..."
                     docker run -d --name ${CONTAINER_NAME} -p ${LOCAL_PORT}:${LOCAL_PORT} ${IMAGE_NAME}
-                    """
-                }
-            }
-        }
-
-        stage('Setup ngrok') {
-            steps {
-                script {
-                    // Install ngrok jika belum ada
-                    sh """
-                    if ! [ -x "$(command -v ngrok)" ]; then
-                        echo "Downloading ngrok..."
-                        curl -sSL https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o ngrok.zip
-                        unzip ngrok.zip
-                        chmod +x ngrok
-                        sudo mv ngrok /usr/local/bin
-                    fi
                     """
                 }
             }
