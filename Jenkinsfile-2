@@ -5,7 +5,7 @@ pipeline {
         CONTAINER_NAME = "dashboard-mec"
         IMAGE_NAME = "dashboard-mec-php-env"
         NGROK_AUTH_TOKEN = credentials('ngrok-auth-token') // Simpan token ngrok di Jenkins Credentials
-        LOCAL_PORT = "8080" // Ganti port sesuai aplikasi Anda
+        LOCAL_PORT = "9000:80" // Ganti port sesuai aplikasi Anda
     }
 
     stages {
