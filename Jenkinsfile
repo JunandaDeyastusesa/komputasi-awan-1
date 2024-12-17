@@ -3,18 +3,18 @@ pipeline {
 
     environment {
         ANSIBLE_HOST_KEY_CHECKING = 'false'  // Menonaktifkan pengecekan host key untuk SSH (optional)
-        ANSIBLE_INVENTORY = '/path/to/your/hosts' // Path ke file inventory
-        PLAYBOOK_PATH = '/path/to/your/playbook.yml' // Path ke playbook PHP
-        MYSQL_PLAYBOOK_PATH = '/path/to/your/mysql.yml' // Path ke playbook MySQL
-        ANSIBLE_USER = 'your_user'  // Ganti dengan username yang digunakan untuk SSH
-        ANSIBLE_SSH_KEY = credentials('your-ssh-key-id') // Pastikan SSH key disimpan di Jenkins
+        ANSIBLE_INVENTORY = '/hosts' // Path ke file inventory
+        PLAYBOOK_PATH = '/requirement.yml' // Path ke playbook PHP
+        MYSQL_PLAYBOOK_PATH = '/playbooks/mariadb.yml' // Path ke playbook MySQL
+        ANSIBLE_USER = 'juna'  // Ganti dengan username yang digunakan untuk SSH
+        ANSIBLE_SSH_KEY = credentials('github-credentials') // Pastikan SSH key disimpan di Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
                 // Checkout kode dari repository GitHub
-                git branch: 'main', url: 'https://github.com/your-repository/your-php-app.git'
+                git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
 
