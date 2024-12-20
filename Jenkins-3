@@ -1,12 +1,26 @@
 pipeline {
     agent any
     stages {
-        stage('Check PATH') {
+        stage('Checkout') {
             steps {
-                script {
-                    // Memeriksa path Git dan nohup
-                    sh 'echo $PATH'  // Untuk memastikan path Git ada di Jenkins
-                    sh '"C:\\Program Files\\Git\\bin\\nohup.exe" echo "Test" &'
+                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'composer install'
+                sh 'phpunit'
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                docker.build("your-image-name:${env.BUILD_NUMBER}")
+            }
+        }
+        stage('Docker Push') {
+            steps {
+                docker.withRegistry('https://index.docker.io') {
+                    docker.image("your-image-name:${env.BUILD_NUMBER}").push()
                 }
             }
         }
