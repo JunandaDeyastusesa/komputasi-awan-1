@@ -13,34 +13,46 @@ pipeline {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Run MySQL, PHP, and phpMyAdmin') {
+        stage('Run MySQL') {
             steps {
                 script {
-                    // Pull MySQL image, PHP environment image, and phpMyAdmin image
+                    // Pull MySQL image
                     def mysql = docker.image('junandad/mysql')
-                    def phpEnv = docker.image('junandad/dashboard-mec-php-env')
-                    def phpMyAdmin = docker.image('phpmyadmin/phpmyadmin')
-
-                    // Pull the latest images
                     mysql.pull()
-                    phpEnv.pull()
-                    phpMyAdmin.pull()
 
                     // Run MySQL container
                     def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3307:3306')
+                    echo 'MySQL container is running...'
 
-                    // Wait for MySQL to be ready before running the PHP app
+                    // Wait for MySQL to be ready
                     echo 'Waiting for MySQL to be ready...'
-                    sleep(20) // Tunda selama 20 detik untuk MySQL siap
+                    sleep(20) // Wait 20 seconds to allow MySQL to start
+                }
+            }
+        }
+        stage('Run PHP Environment') {
+            steps {
+                script {
+                    // Pull PHP environment image
+                    def phpEnv = docker.image('junandad/dashboard-mec-php-env')
+                    phpEnv.pull()
 
-                    // Run PHP environment container and link it to MySQL
+                    // Run PHP container and link it to MySQL
                     def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
+                    echo 'PHP environment container is running...'
+                }
+            }
+        }
+        stage('Run phpMyAdmin') {
+            steps {
+                script {
+                    // Pull phpMyAdmin image
+                    def phpMyAdmin = docker.image('phpmyadmin/phpmyadmin')
+                    phpMyAdmin.pull()
 
                     // Run phpMyAdmin container and link it to MySQL
                     def phpMyAdminContainer = phpMyAdmin.run("-e PMA_HOST=${MYSQL_HOST} -e PMA_USER=${MYSQL_USER} -e PMA_PASSWORD=${MYSQL_PASSWORD} -p 9001:80")
-
-                    // Optionally wait for phpMyAdmin to be accessible
-                    echo 'Both containers (PHP and phpMyAdmin) should now be running.'
+                    echo 'phpMyAdmin container is running...'
                 }
             }
         }
