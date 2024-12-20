@@ -6,12 +6,6 @@ pipeline {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Build') {
-            steps {
-                sh 'composer install'
-                sh 'phpunit'
-            }
-        }
         stage('Run Image') {
             steps {
                 script {
