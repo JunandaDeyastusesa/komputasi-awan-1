@@ -1,28 +1,25 @@
 pipeline {
-    agent any
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
-            }
-        }
-        stage('Build') {
-            steps {
-                sh 'composer install'
-                sh 'phpunit'
-            }
-        }
-        stage('Docker Build') {
-            steps {
-                docker.build("your-image-name:${env.BUILD_NUMBER}")
-            }
-        }
-        stage('Docker Push') {
-            steps {
-                docker.withRegistry('https://index.docker.io') {
-                    docker.image("your-image-name:${env.BUILD_NUMBER}").push()
-                }
-            }
-        }
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+      }
     }
+    stage('Build') {
+      steps {
+        sh 'composer install'
+        sh 'phpunit'
+      }
+    }
+    stage('Run Image') {
+      steps {
+        docker.run(
+          image: 'dashboard-mec-php-env:latest',
+          ports: ['9000:80'],
+          workingDir: '/var/www/html'
+        )
+      }
+    }
+  }
 }
