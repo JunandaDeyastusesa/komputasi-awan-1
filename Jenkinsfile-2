@@ -1,61 +1,55 @@
 pipeline {
     agent any
-
     environment {
-        CONTAINER_NAME = "dashboard-mec"
-        IMAGE_NAME = "dashboard-mec-php-env"
-        NGROK_AUTH_TOKEN = credentials('ngrok-auth-token') // Simpan token ngrok di Jenkins Credentials
-        LOCAL_PORT = "9000:80" // Ganti port sesuai aplikasi Anda
+        // Environment variables for MySQL connection
+        MYSQL_HOST = 'mysql_db'    // Nama service MySQL yang didefinisikan dalam Docker Compose
+        MYSQL_USER = 'mec'
+        MYSQL_PASSWORD = 'root'
+        MYSQL_DB = 'db_bimbelonline'
     }
-
     stages {
-        stage('Run Docker Container') {
+        stage('Checkout') {
             steps {
-                script {
-                    // Jalankan container dari image
-                    sh """
-                    echo "Starting Docker container ${CONTAINER_NAME}..."
-                    docker run -d --name ${CONTAINER_NAME} -p ${LOCAL_PORT}:${LOCAL_PORT} ${IMAGE_NAME}
-                    """
-                }
+                git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-
-        stage('Run ngrok') {
+        stage('Run MySQL and PHP') {
             steps {
                 script {
-                    // Autentikasi ngrok dan forward port
-                    sh """
-                    echo "Configuring ngrok..."
-                    ngrok config add-authtoken ${NGROK_AUTH_TOKEN}
+                    // Pull MySQL image and PHP environment image
+                    def mysql = docker.image('junandad/mysql')
+                    def phpEnv = docker.image('junandad/dashboard-mec-php-env')
+
+                    // Pull the latest images
+                    mysql.pull()
+                    phpEnv.pull()
+
+                    // Run MySQL container with a different port if needed
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 9001:80')
+
+                    // Wait for MySQL to be ready before running the PHP app
+                    echo 'Waiting for MySQL to be ready...'
+                    sleep(20) // Tunda selama 20 detik untuk MySQL siap
+
+                    // Check if database exists
+                    echo 'Checking if database exists...'
+                    def dbExists = sh(script: """
+                        docker exec ${mysqlContainer.id} mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -e "SHOW DATABASES LIKE '${MYSQL_DB}';"
+                    """, returnStatus: true)
                     
-                    echo "Starting ngrok on port ${LOCAL_PORT}..."
-                    nohup ngrok http ${LOCAL_PORT} > ngrok.log &
-                    sleep 5
+                    if (dbExists == 0) {
+                        echo "Database ${MYSQL_DB} exists."
+                    } else {
+                        echo "Database ${MYSQL_DB} does not exist."
+                    }
 
-                    echo "Fetching ngrok public URL..."
-                    NGROK_URL=\$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-                    echo "Ngrok URL: \$NGROK_URL"
+                    // Run PHP environment container and link it to MySQL
+                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
 
-                    echo "NGROK_URL=\$NGROK_URL" > ngrok_url.txt
-                    """
+                    // Optionally wait for PHP container to run, but `waitFor` isn't needed
+                    echo 'Both containers should now be running.'
                 }
             }
-        }
-
-        stage('Display ngrok URL') {
-            steps {
-                script {
-                    // Tampilkan URL ngrok di console Jenkins
-                    sh 'cat ngrok_url.txt'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            echo "Pipeline completed."
         }
     }
 }
