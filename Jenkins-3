@@ -10,7 +10,7 @@ pipeline {
             steps {
                 script {
                     // Pull and run the Docker image
-                    def app = docker.image('dashboard-mec-php-env:latest')
+                    def app = docker.image('junandad/dashboard-mec-php-env')
                     app.pull() // Ensure the latest image is pulled
                     app.run('-p 9000:80 -w /var/www/html') // Run with specified options
                 }
