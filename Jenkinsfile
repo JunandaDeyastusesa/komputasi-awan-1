@@ -24,8 +24,8 @@ pipeline {
                     mysql.pull()
                     phpEnv.pull()
 
-                    // Run MySQL container
-                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3306:3306')
+                    // Run MySQL container with a different port if needed
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3307:3306')
 
                     // Wait for MySQL to be ready before running the PHP app
                     echo 'Waiting for MySQL to be ready...'
