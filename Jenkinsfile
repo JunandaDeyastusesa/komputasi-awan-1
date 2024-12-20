@@ -17,7 +17,7 @@ pipeline {
             steps {
                 script {
                     // Pull MySQL image and PHP environment image
-                    def mysql = docker.image('mysql:latest')
+                    def mysql = docker.image('junandad/mysql')
                     def phpEnv = docker.image('junandad/dashboard-mec-php-env')
 
                     // Pull the latest images
