@@ -25,17 +25,17 @@ pipeline {
                     phpEnv.pull()
 
                     // Run MySQL container
-                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root')
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3306:3306')
 
                     // Wait for MySQL to be ready before running the PHP app
-                    sleep(10)
+                    echo 'Waiting for MySQL to be ready...'
+                    sleep(20) // Tunda selama 20 detik untuk MySQL siap
 
                     // Run PHP environment container and link it to MySQL
-                    phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
+                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
 
-                    // Ensure both containers are running
-                    mysqlContainer.waitFor()
-                    phpEnv.waitFor()
+                    // Optionally wait for PHP container to run, but `waitFor` isn't needed
+                    echo 'Both containers should now be running.'
                 }
             }
         }
