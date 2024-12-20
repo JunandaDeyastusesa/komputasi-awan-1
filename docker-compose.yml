@@ -2,7 +2,7 @@ services:
   php-env:
     build: .
     volumes:
-      - ./:/var/www/html
+      - ./:/var/www/html/OOP
     ports:
       - 9000:80
     depends_on:
