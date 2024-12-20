@@ -1,8 +1,10 @@
+version: '3.8'
+
 services:
   php-env:
     build: .
     volumes:
-      - ./:/var/www/html/OOP
+      - .:/var/www/html
     ports:
       - 9000:80
     depends_on:
@@ -20,6 +22,10 @@ services:
       MYSQL_PASSWORD: root
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 3
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
