@@ -1,0 +1,38 @@
+services:
+  php-env:
+    build: .
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - 9000:80
+    depends_on:
+      - mysql_db
+    networks:
+      - app-network
+
+  mysql_db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_bimbelonline
+      MYSQL_USER: mec
+      MYSQL_PASSWORD: root
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports: 
+      - 9001:80
+    environment:
+      PMA_HOST: mysql_db
+      PMA_USER: mec
+      PMA_PASSWORD: root
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
