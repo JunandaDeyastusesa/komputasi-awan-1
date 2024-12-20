@@ -1,25 +1,26 @@
 pipeline {
-  agent any
-  stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
-      }
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'composer install'
+                sh 'phpunit'
+            }
+        }
+        stage('Run Image') {
+            steps {
+                script {
+                    // Pull and run the Docker image
+                    def app = docker.image('dashboard-mec-php-env:latest')
+                    app.pull() // Ensure the latest image is pulled
+                    app.run('-p 9000:80 -w /var/www/html') // Run with specified options
+                }
+            }
+        }
     }
-    stage('Build') {
-      steps {
-        sh 'composer install'
-        sh 'phpunit'
-      }
-    }
-    stage('Run Image') {
-      steps {
-        docker.run(
-          image: 'dashboard-mec-php-env:latest',
-          ports: ['9000:80'],
-          workingDir: '/var/www/html'
-        )
-      }
-    }
-  }
 }
