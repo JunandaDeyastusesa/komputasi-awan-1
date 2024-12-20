@@ -2,10 +2,10 @@
 
 class koneksi
 {
-  private $hostname = "localhost";
-  private $username = "root";
-  private $password = "";
-  private $name = "db_bimbelonline";
+  public $hostname = "mysql_db";
+  public $username = "mec";
+  public $password = "root";
+  public $name = "db_bimbelonline";
   protected $koneksi;
   public function __construct()
   {
