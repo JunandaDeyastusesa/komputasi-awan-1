@@ -1,57 +1,39 @@
-pipeline {
-    agent any
-    environment {
-        MYSQL_HOST = 'mysql_db'
-        MYSQL_USER = 'mec'
-        MYSQL_PASSWORD = 'root'
-        MYSQL_DB = 'db_bimbelonline'
+agent any
+environment {
+    MYSQL_HOST = 'mysql_db'
+    MYSQL_USER = 'mec'
+    MYSQL_PASSWORD = 'root'
+    MYSQL_DB = 'db_bimbelonline'
+}
+
+stages {
+    stage('Checkout') {
+        steps {
+            git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+        }
     }
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+    
+    stage('Set Up Docker Compose') {
+        steps {
+            script {
+                // Menarik image yang diperlukan oleh docker-compose (jika belum ada)
+                sh 'docker-compose pull'
+
+                // Membangun dan menjalankan container menggunakan docker-compose
+                sh 'docker-compose up -d'
+
+                echo 'MySQL is running with Docker Compose'
             }
         }
-        stage('Run MySQL') {
-            steps {
-                script {
-                    def mysql = docker.image('mysql:latest')
-                    mysql.pull()
-                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3307:3306')
-                    echo 'MySQL is running'
-                }
-            }
-        }
-        stage('Run phpMyAdmin') {
-            steps {
-                script {
-                    def phpMyAdmin = docker.image('phpmyadmin/phpmyadmin')
-                    phpMyAdmin.pull()
-                    def phpMyAdminContainer = phpMyAdmin.run("-e PMA_HOST=${MYSQL_HOST} -e PMA_USER=${MYSQL_USER} -e PMA_PASSWORD=${MYSQL_PASSWORD} -p 9001:80")
-                    echo 'phpMyAdmin is running and accessible at http://localhost:9001'
-                }
-            }
-        }
-        stage('Restart Services') {
-            steps {
-                script {
-                    echo 'Restarting containers...'
-                    sh '''
-                    docker ps -q --filter "ancestor=mysql:latest" | xargs -r docker stop
-                    docker ps -q --filter "ancestor=phpmyadmin/phpmyadmin" | xargs -r docker stop
-                    docker ps -a -q --filter "ancestor=mysql:latest" | xargs -r docker rm
-                    docker ps -a -q --filter "ancestor=phpmyadmin/phpmyadmin" | xargs -r docker rm
-                    '''
-                    echo 'Containers stopped and removed. Re-running them.'
-                    
-                    def mysql = docker.image('mysql:latest')
-                    mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3307:3306')
-                    echo 'MySQL restarted.'
-                    
-                    def phpMyAdmin = docker.image('phpmyadmin/phpmyadmin')
-                    phpMyAdmin.run("-e PMA_HOST=${MYSQL_HOST} -e PMA_USER=${MYSQL_USER} -e PMA_PASSWORD=${MYSQL_PASSWORD} -p 9001:80")
-                    echo 'phpMyAdmin restarted.'
-                }
+    }
+    
+    stage('Verify MySQL') {
+        steps {
+            script {
+                // Verifikasi jika MySQL sudah berjalan
+                sh 'docker-compose ps'
+
+                echo 'Verification of MySQL container'
             }
         }
     }
