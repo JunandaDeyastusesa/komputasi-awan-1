@@ -1,4 +1,6 @@
 version: '3.8'
+networks:
+    app-network
 
 services:
   php-env:
@@ -19,6 +21,9 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: db_bimbelonline
       MYSQL_USER: mec
+      MYSQL_PASSWORD: root
+    volumes:
+      - .:/var/www/html
     networks:
       - app-network
 
@@ -28,10 +33,12 @@ services:
     ports: 
       - 9001:80
     environment:
-      - PMA_ARBITRARY=1
-      # PMA_HOST: mysql_db
+      # - PMA_ARBITRARY=1
+      PMA_HOST: mysql_db
       # PMA_USER: mec
       # PMA_PASSWORD: root
+    volumes:
+      - .:/var/www/html
     networks:
       - app-network
 
