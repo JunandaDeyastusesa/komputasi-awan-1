@@ -17,7 +17,7 @@ pipeline {
             steps {
                 script {
                     // Pull MySQL image
-                    def mysql = docker.image('junandad/mysql')
+                    def mysql = docker.image('mysql')
                     mysql.pull()
 
                     // Run MySQL container
@@ -34,7 +34,7 @@ stage('Run phpMyAdmin') {
             steps {
                 script {
                     // Pull phpMyAdmin image
-                    def phpMyAdmin = docker.image('phpmyadmin/phpmyadmin')
+                    def phpMyAdmin = docker.image('phpmyadmin')
                     phpMyAdmin.pull()
 
                     // Run phpMyAdmin container and link it to MySQL
@@ -47,7 +47,7 @@ stage('Run phpMyAdmin') {
             steps {
                 script {
                     // Pull PHP environment image
-                    def phpEnv = docker.image('junandad/dashboard-mec-php-env')
+                    def phpEnv = docker.image('dashboard-mec-php-env')
                     phpEnv.pull()
 
                     // Run PHP container and link it to MySQL
