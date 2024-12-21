@@ -21,7 +21,7 @@ pipeline {
                     mysql.pull()
 
                     // Run MySQL container
-                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3307:3306')
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root')
                     echo 'MySQL container is running...'
 
                     // Wait for MySQL to be ready
