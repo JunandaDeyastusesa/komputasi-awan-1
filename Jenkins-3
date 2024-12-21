@@ -1,65 +1,74 @@
 pipeline {
     agent any
     environment {
-        MYSQL_HOST = 'mysql_db'
+        // Environment variables for MySQL connection
+        MYSQL_HOST = 'mysql_db'    // Nama service MySQL yang didefinisikan dalam Docker Compose
         MYSQL_USER = 'mec'
         MYSQL_PASSWORD = 'root'
         MYSQL_DB = 'db_bimbelonline'
+        NGROK_AUTH_TOKEN = '2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD' // Token ngrok Anda
     }
-
     stages {
         stage('Checkout') {
             steps {
-                // Cloning the repository to the workspace
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        
-        stage('Set Up Docker Compose') {
+        stage('Run MySQL') {
             steps {
                 script {
-                    // Pulling the necessary images using docker-compose (if not already pulled)
-                    sh 'docker-compose pull'
+                    // Pull MySQL image
+                    def mysql = docker.image('mysql')
+                    mysql.pull()
 
-                    // Building and running the containers using docker-compose
-                    sh 'docker-compose up -d'
+                    // Run MySQL container
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root')
+                    echo 'MySQL container is running...'
 
-                    echo 'Docker Compose has started MySQL, PHP, and phpMyAdmin containers'
+                    // Wait for MySQL to be ready
+                    echo 'Waiting for MySQL to be ready...'
+                    sleep(20) // Wait 20 seconds to allow MySQL to start
                 }
             }
         }
-
-        stage('Verify MySQL and phpMyAdmin') {
+        stage('Run phpMyAdmin') {
             steps {
                 script {
-                    // Verify if MySQL container is running
-                    sh 'docker-compose ps'
+                    // Pull phpMyAdmin image
+                    def phpMyAdmin = docker.image('phpmyadmin')
+                    phpMyAdmin.pull()
 
-                    // Check the status of the MySQL container to ensure it's up
-                    def mysqlStatus = sh(script: 'docker ps --filter "name=mysql_db" --quiet', returnStdout: true).trim()
-                    if (mysqlStatus) {
-                        echo 'MySQL container is running successfully.'
-                    } else {
-                        error 'MySQL container is not running!'
-                    }
-
-                    // Check if phpMyAdmin is accessible (you can also verify via browser if needed)
-                    def phpMyAdminStatus = sh(script: 'docker ps --filter "name=phpmyadmin" --quiet', returnStdout: true).trim()
-                    if (phpMyAdminStatus) {
-                        echo 'phpMyAdmin container is running successfully.'
-                    } else {
-                        error 'phpMyAdmin container is not running!'
-                    }
+                    // Run phpMyAdmin container and link it to MySQL
+                    def phpMyAdminContainer = phpMyAdmin.run("-e PMA_HOST=${MYSQL_HOST} -e PMA_USER=${MYSQL_USER} -e PMA_PASSWORD=${MYSQL_PASSWORD} -p 9001:80")
+                    echo 'phpMyAdmin container is running...'
                 }
             }
         }
-    }
+        stage('Run PHP Environment') {
+            steps {
+                script {
+                    // Pull PHP environment image
+                    def phpEnv = docker.image('junandad/dashboard-mec-php-env')
+                    phpEnv.pull()
 
-    post {
-        always {
-            // Optionally stop and remove containers after the pipeline execution
-            echo 'Stopping Docker Compose services'
-            sh 'docker-compose down'
+                    // Run PHP container and link it to MySQL
+                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
+                    echo 'PHP environment container is running...'
+                }
+            }
+        }
+        stage('Run ngrok') {
+            steps {
+                script {
+                    // Install ngrok (if not already installed)
+                    sh 'curl -s https://ngrok.com/download | tar xz && sudo mv ngrok /usr/local/bin'
+
+                    // Start ngrok tunnel for PHP port (e.g., 9000)
+                    sh 'ngrok authtoken ${NGROK_AUTH_TOKEN}' // Authenticate ngrok
+                    def ngrokProcess = sh(script: 'ngrok http 9000 --log=stdout', returnStdout: true).trim()
+                    echo "Ngrok started: ${ngrokProcess}"
+                }
+            }
         }
     }
 }
