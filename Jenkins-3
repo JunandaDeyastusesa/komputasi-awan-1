@@ -57,6 +57,14 @@ pipeline {
                 }
             }
         }
+        post {
+            success {
+                slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil!'
+            }
+            failure {
+                slackSend channel: '#build-testing`', color: 'danger', message: 'Pipeline gagal!'
+            }
+        }
         stage('Run ngrok') {
             steps {
                 script {
