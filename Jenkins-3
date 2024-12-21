@@ -1,18 +1,34 @@
 pipeline {
     agent any
+    environment {
+        MYSQL_HOST = 'mysql_db'
+        MYSQL_USER = 'mec'
+        MYSQL_PASSWORD = 'root'
+        MYSQL_DB = 'db_bimbelonline'
+    }
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Run Image') {
+        stage('Run MySQL') {
             steps {
                 script {
-                    // Pull and run the Docker image
-                    def app = docker.image('junandad/dashboard-mec-php-env')
-                    app.pull() // Ensure the latest image is pulled
-                    app.run('-p 9000:80 -w /var/www/html') // Run with specified options
+                    def mysql = docker.image('mysql:latest')
+                    mysql.pull()
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root -p 3307:3306')
+                    echo 'MySQL is running'
+                }
+            }
+        }
+        stage('Run phpMyAdmin') {
+            steps {
+                script {
+                    def phpMyAdmin = docker.image('phpmyadmin/phpmyadmin')
+                    phpMyAdmin.pull()
+                    def phpMyAdminContainer = phpMyAdmin.run("-e PMA_HOST=${MYSQL_HOST} -e PMA_USER=${MYSQL_USER} -e PMA_PASSWORD=${MYSQL_PASSWORD} -p 9001:80")
+                    echo 'phpMyAdmin is running and accessible at http://localhost:9001'
                 }
             }
         }
