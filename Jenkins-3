@@ -57,23 +57,25 @@ pipeline {
                 }
             }
         }
-        post {
-            success {
-                slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil!'
-            }
-            failure {
-                slackSend channel: '#build-testing`', color: 'danger', message: 'Pipeline gagal!'
-            }
-        }
         stage('Run ngrok') {
             steps {
                 script {
+                    // Authenticate ngrok with the provided token
+                    sh "ngrok authtoken ${NGROK_AUTH_TOKEN}"
+
                     // Start ngrok tunnel for PHP port (e.g., 9000)
-                    sh 'ngrok authtoken ${NGROK_AUTH_TOKEN}' // Authenticate ngrok
-                    def ngrokProcess = sh(script: 'ngrok http 9000 --log=stdout', returnStdout: true).trim()
+                    def ngrokProcess = sh(script: "ngrok http 9000 --log=stdout", returnStdout: true).trim()
                     echo "Ngrok started: ${ngrokProcess}"
                 }
             }
+        }
+    }
+    post {
+        success {
+            slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil!'
+        }
+        failure {
+            slackSend channel: '#build-testing', color: 'danger', message: 'Pipeline gagal!'
         }
     }
 }
