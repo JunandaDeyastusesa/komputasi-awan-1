@@ -1,42 +1,65 @@
 pipeline {
-agent any
-environment {
-    MYSQL_HOST = 'mysql_db'
-    MYSQL_USER = 'mec'
-    MYSQL_PASSWORD = 'root'
-    MYSQL_DB = 'db_bimbelonline'
-}
-
-stages {
-    stage('Checkout') {
-        steps {
-            git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
-        }
+    agent any
+    environment {
+        MYSQL_HOST = 'mysql_db'
+        MYSQL_USER = 'mec'
+        MYSQL_PASSWORD = 'root'
+        MYSQL_DB = 'db_bimbelonline'
     }
-    
-    stage('Set Up Docker Compose') {
-        steps {
-            script {
-                // Menarik image yang diperlukan oleh docker-compose (jika belum ada)
-                sh 'docker-compose pull'
 
-                // Membangun dan menjalankan container menggunakan docker-compose
-                sh 'docker-compose up -d'
+    stages {
+        stage('Checkout') {
+            steps {
+                // Cloning the repository to the workspace
+                git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+            }
+        }
+        
+        stage('Set Up Docker Compose') {
+            steps {
+                script {
+                    // Pulling the necessary images using docker-compose (if not already pulled)
+                    sh 'docker-compose pull'
 
-                echo 'MySQL is running with Docker Compose'
+                    // Building and running the containers using docker-compose
+                    sh 'docker-compose up -d'
+
+                    echo 'Docker Compose has started MySQL, PHP, and phpMyAdmin containers'
+                }
+            }
+        }
+
+        stage('Verify MySQL and phpMyAdmin') {
+            steps {
+                script {
+                    // Verify if MySQL container is running
+                    sh 'docker-compose ps'
+
+                    // Check the status of the MySQL container to ensure it's up
+                    def mysqlStatus = sh(script: 'docker ps --filter "name=mysql_db" --quiet', returnStdout: true).trim()
+                    if (mysqlStatus) {
+                        echo 'MySQL container is running successfully.'
+                    } else {
+                        error 'MySQL container is not running!'
+                    }
+
+                    // Check if phpMyAdmin is accessible (you can also verify via browser if needed)
+                    def phpMyAdminStatus = sh(script: 'docker ps --filter "name=phpmyadmin" --quiet', returnStdout: true).trim()
+                    if (phpMyAdminStatus) {
+                        echo 'phpMyAdmin container is running successfully.'
+                    } else {
+                        error 'phpMyAdmin container is not running!'
+                    }
+                }
             }
         }
     }
-    
-    stage('Verify MySQL') {
-        steps {
-            script {
-                // Verifikasi jika MySQL sudah berjalan
-                sh 'docker-compose ps'
 
-                echo 'Verification of MySQL container'
-            }
+    post {
+        always {
+            // Optionally stop and remove containers after the pipeline execution
+            echo 'Stopping Docker Compose services'
+            sh 'docker-compose down'
         }
     }
-}
 }
