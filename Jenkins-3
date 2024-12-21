@@ -1,3 +1,4 @@
+pipeline {
 agent any
 environment {
     MYSQL_HOST = 'mysql_db'
@@ -37,4 +38,5 @@ stages {
             }
         }
     }
+}
 }
