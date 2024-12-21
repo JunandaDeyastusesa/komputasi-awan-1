@@ -9,9 +9,14 @@ pipeline {
         NGROK_AUTH_TOKEN = '2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD' // Token ngrok Anda
     }
     stages {
-        stage('Checkout') {
+        stage('Git Checkout') {
             steps {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+            }
+        }
+        stage('Pull Image From Dockerhub') {
+            steps {
+                echo 'Success...'
             }
         }
         stage('Run MySQL') {
@@ -44,7 +49,7 @@ pipeline {
                 }
             }
         }
-        stage('Run PHP Environment') {
+        stage('Run File PHP') {
             steps {
                 script {
                     // Pull PHP environment image
@@ -54,18 +59,6 @@ pipeline {
                     // Run PHP container and link it to MySQL
                     def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
                     echo 'PHP environment container is running...'
-                }
-            }
-        }
-        stage('Run ngrok') {
-            steps {
-                script {
-                    // Authenticate ngrok with the provided token
-                    sh "ngrok authtoken ${NGROK_AUTH_TOKEN}"
-
-                    // Start ngrok tunnel for PHP port (e.g., 9000)
-                    def ngrokProcess = sh(script: "ngrok http 9000 --log=stdout", returnStdout: true).trim()
-                    echo "Ngrok started: ${ngrokProcess}"
                 }
             }
         }
