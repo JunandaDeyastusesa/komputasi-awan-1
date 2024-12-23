@@ -13,6 +13,20 @@ pipeline {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
+        stage('Create Docker Network') {
+            steps {
+                script {
+                    // Create the Docker network if it doesn't exist
+                    def networkExists = sh(script: "docker network ls --filter name=my-network -q", returnStdout: true).trim()
+                    if (networkExists.isEmpty()) {
+                        echo 'Creating Docker network: my-network'
+                        sh 'docker network create my-network'
+                    } else {
+                        echo 'Docker network "my-network" already exists.'
+                    }
+                }
+            }
+        }
         stage('Run MySQL Container') {
             steps {
                 script {
