@@ -6,7 +6,6 @@ pipeline {
         MYSQL_USER = 'mec'
         MYSQL_PASSWORD = 'root'
         MYSQL_DB = 'db_bimbelonline'
-        NGROK_AUTH_TOKEN = '2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD' // Token ngrok Anda
     }
     stages {
         stage('Git Checkout') {
@@ -14,49 +13,37 @@ pipeline {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Pull Image From Docker Hub') {
+        stage('Pull Image From Dockerhub') {
             steps {
-                echo 'Pulling images from Docker Hub...'
-                // Here, we just add echo statement to indicate pulling images
-                // The actual pulling happens in the next stages where containers are run
+                echo 'Success...'
             }
         }
         stage('Run MySQL') {
             steps {
                 script {
-                    // Pull MySQL image from Docker Hub
-                    def mysql = docker.image('junandad/mysql:8.0')
+                    // Pull MySQL image
+                    def mysql = docker.image('mysql:8.0')
                     mysql.pull()
 
                     // Run MySQL container
-                    def mysqlContainer = mysql.run('-d --name mysql ' +
-                        '-e MYSQL_ROOT_PASSWORD=root ' +
-                        '-e MYSQL_DATABASE=db_bimbelonline ' +
-                        '-e MYSQL_USER=mec ' +
-                        '-e MYSQL_PASSWORD=root')
+                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root')
                     echo 'MySQL container is running...'
 
-                    // Wait for MySQL to be ready (simple sleep, adjust as needed)
+                    // Wait for MySQL to be ready
                     echo 'Waiting for MySQL to be ready...'
                     sleep(20) // Wait 20 seconds to allow MySQL to start
                 }
             }
         }
-        stage('Run PHP File') {
+        stage('Run File PHP') {
             steps {
                 script {
-                    // Pull PHP environment image from Docker Hub
-                    def phpEnv = docker.image('junandad/dashboard-mec-php')
+                    // Pull PHP environment image
+                    def phpEnv = docker.image('junandad/dashboard-mec-php:try')
                     phpEnv.pull()
 
                     // Run PHP container and link it to MySQL
-                    def phpContainer = phpEnv.run("-d --name dashboard-mec-php " +
-                        "-e MYSQL_HOST=${MYSQL_HOST} " +
-                        "-e MYSQL_USER=${MYSQL_USER} " +
-                        "-e MYSQL_PASSWORD=${MYSQL_PASSWORD} " +
-                        "-e MYSQL_DB=${MYSQL_DB} " +
-                        "-p 9000:80 " +
-                        "-v $WORKSPACE:/var/www/html")
+                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
                     echo 'PHP environment container is running...'
                 }
             }
