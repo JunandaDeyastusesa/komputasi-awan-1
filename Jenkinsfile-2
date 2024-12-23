@@ -1,14 +1,14 @@
 pipeline {
     agent any
     environment {
-        // Environment variables for database
-        MYSQL_ROOT_PASSWORD = 'root'
-        MYSQL_DATABASE = 'db_bimbelonline'
+        // Environment variables for MySQL connection
+        MYSQL_HOST = 'mysql_db'
         MYSQL_USER = 'mec'
         MYSQL_PASSWORD = 'root'
+        MYSQL_DB = 'db_bimbelonline'
     }
     stages {
-        stage('Checkout Repository') {
+        stage('Git Checkout') {
             steps {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
@@ -16,41 +16,36 @@ pipeline {
         stage('Run MySQL Container') {
             steps {
                 script {
-                    sh '''
-                        docker run -d --name mysql_db \
-                        -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
-                        -e MYSQL_DATABASE=$MYSQL_DATABASE \
-                        -e MYSQL_USER=$MYSQL_USER \
-                        -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
-                        -v db_data:/var/lib/mysql \
-                        junandad/mysql:8.0
-                    '''
+                    // Pull MySQL image and run container
+                    docker.image('junandad/mysql:8.0').run('-d --name mysql_db ' +
+                        '-e MYSQL_ROOT_PASSWORD=root ' +
+                        '-e MYSQL_DATABASE=db_bimbelonline ' +
+                        '-e MYSQL_USER=mec ' +
+                        '-e MYSQL_PASSWORD=root ' +
+                        '--network=my-network')
+                    echo 'MySQL container is running...'
                 }
             }
         }
         stage('Run PHP Container') {
             steps {
                 script {
-                    sh '''
-                        docker run -d --name php_app \
-                        --link mysql_db:mysql \
-                        -p 8083:80 \
-                        -e MYSQL_HOST=mysql_db \
-                        -e MYSQL_USER=$MYSQL_USER \
-                        -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
-                        -e MYSQL_DB=$MYSQL_DATABASE \
-                        junandad/dashboard-mec-php:try
-                    '''
+                    // Pull PHP image and run container
+                    docker.image('junandad/dashboard-mec-php:try').run('-d --name php_app ' +
+                        '-p 8083:80 ' +
+                        '--network=my-network ' +
+                        '-v $WORKSPACE:/var/www/html')
+                    echo 'PHP container is running...'
                 }
             }
         }
     }
     post {
         success {
-            echo 'Pipeline berhasil dijalankan.'
+            echo 'Pipeline executed successfully!'
         }
         failure {
-            echo 'Pipeline gagal. Silakan periksa log untuk lebih detail.'
+            echo 'Pipeline execution failed.'
         }
     }
 }
