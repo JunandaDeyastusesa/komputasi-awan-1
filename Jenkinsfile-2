@@ -6,56 +6,44 @@ pipeline {
         MYSQL_USER = 'mec'
         MYSQL_PASSWORD = 'root'
         MYSQL_DB = 'db_bimbelonline'
-        NGROK_AUTH_TOKEN = '2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD' // Token ngrok Anda
     }
     stages {
-        stage('Git Checkout') {
+        stage('Checkout Repository') {
             steps {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Pull Image From Dockerhub') {
-            steps {
-                echo 'Success...'
-            }
-        }
-        stage('Run MySQL') {
+        stage('Build and Run Docker Compose') {
             steps {
                 script {
-                    // Pull MySQL image
-                    def mysql = docker.image('mysql')
-                    mysql.pull()
-
-                    // Run MySQL container
-                    def mysqlContainer = mysql.run('-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db_bimbelonline -e MYSQL_USER=mec -e MYSQL_PASSWORD=root')
-                    echo 'MySQL container is running...'
-
-                    // Wait for MySQL to be ready
-                    echo 'Waiting for MySQL to be ready...'
-                    sleep(20) // Wait 20 seconds to allow MySQL to start
+                    // Jalankan Docker Compose untuk membangun dan menjalankan layanan
+                    sh 'docker-compose down' // Pastikan tidak ada container lama yang berjalan
+                    sh 'docker-compose up -d --build'
                 }
             }
         }
-        stage('Run File PHP') {
+        stage('Verify Services') {
             steps {
                 script {
-                    // Pull PHP environment image
-                    def phpEnv = docker.image('junandad/dashboard-mec-php-env')
-                    phpEnv.pull()
+                    // Tunggu hingga MySQL siap
+                    echo 'Waiting for MySQL service to be ready...'
+                    sleep(20) // Tunggu agar MySQL siap (atau gunakan healthcheck lebih kompleks)
 
-                    // Run PHP container and link it to MySQL
-                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 7005:80 -w /var/www/html")
-                    echo 'PHP environment container is running...'
+                    // Verifikasi bahwa container PHP berjalan
+                    sh 'docker ps | grep php'
+
+                    // Verifikasi bahwa container MySQL berjalan
+                    sh 'docker ps | grep mysql_db'
                 }
             }
         }
     }
     post {
         success {
-            slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil!'
+            slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil! Layanan berhasil berjalan dengan Docker Compose.'
         }
         failure {
-            slackSend channel: '#build-testing', color: 'danger', message: 'Pipeline gagal!'
+            slackSend channel: '#build-testing', color: 'danger', message: 'Pipeline gagal! Periksa konfigurasi atau log Docker Compose.'
         }
     }
 }
