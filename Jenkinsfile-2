@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                     // Pull MySQL image from Docker Hub
-                    def mysql = docker.image('mysql:8.0')
+                    def mysql = docker.image('junandad/mysql:8.0')
                     mysql.pull()
 
                     // Run MySQL container
