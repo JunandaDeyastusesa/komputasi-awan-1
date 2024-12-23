@@ -6,11 +6,17 @@ pipeline {
         MYSQL_USER = 'mec'
         MYSQL_PASSWORD = 'root'
         MYSQL_DB = 'db_bimbelonline'
+        NGROK_AUTH_TOKEN = '2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD' // Token ngrok Anda
     }
     stages {
-        stage('Checkout') {
+        stage('Git Checkout') {
             steps {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
+            }
+        }
+        stage('Pull Image From Dockerhub') {
+            steps {
+                echo 'Success...'
             }
         }
         stage('Run MySQL') {
@@ -30,20 +36,7 @@ pipeline {
                 }
             }
         }
-stage('Run phpMyAdmin') {
-            steps {
-                script {
-                    // Pull phpMyAdmin image
-                    def phpMyAdmin = docker.image('phpmyadmin')
-                    phpMyAdmin.pull()
-
-                    // Run phpMyAdmin container and link it to MySQL
-                    def phpMyAdminContainer = phpMyAdmin.run("-e PMA_HOST=${MYSQL_HOST} -e PMA_USER=${MYSQL_USER} -e PMA_PASSWORD=${MYSQL_PASSWORD} -p 9001:80")
-                    echo 'phpMyAdmin container is running...'
-                }
-            }
-        }
-        stage('Run PHP Environment') {
+        stage('Run File PHP') {
             steps {
                 script {
                     // Pull PHP environment image
@@ -51,10 +44,18 @@ stage('Run phpMyAdmin') {
                     phpEnv.pull()
 
                     // Run PHP container and link it to MySQL
-                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 9000:80 -w /var/www/html")
+                    def phpContainer = phpEnv.run("-e MYSQL_HOST=${MYSQL_HOST} -e MYSQL_USER=${MYSQL_USER} -e MYSQL_PASSWORD=${MYSQL_PASSWORD} -e MYSQL_DB=${MYSQL_DB} -p 7005:80 -w /var/www/html")
                     echo 'PHP environment container is running...'
                 }
             }
+        }
+    }
+    post {
+        success {
+            slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil!'
+        }
+        failure {
+            slackSend channel: '#build-testing', color: 'danger', message: 'Pipeline gagal!'
         }
     }
 }
