@@ -2,10 +2,11 @@ pipeline {
     agent any
     environment {
         // Environment variables for MySQL connection
-        MYSQL_HOST = 'mysql_db'
+        MYSQL_HOST = 'mysql_db'    // Nama service MySQL yang didefinisikan dalam Docker Compose
         MYSQL_USER = 'mec'
         MYSQL_PASSWORD = 'root'
         MYSQL_DB = 'db_bimbelonline'
+        NGROK_AUTH_TOKEN = '2mvZEbgvDec3nHj9wYVIg2p4A0g_6kLEx9P6JELgETyokwaD' // Token ngrok Anda
     }
     stages {
         stage('Git Checkout') {
@@ -13,53 +14,60 @@ pipeline {
                 git branch: 'WDC-V2', url: 'https://github.com/JunandaDeyastusesa/komputasi-awan-1.git'
             }
         }
-        stage('Create Docker Network') {
+        stage('Pull Image From Docker Hub') {
             steps {
-                script {
-                    // Create the Docker network if it doesn't exist
-                    def networkExists = sh(script: "docker network ls --filter name=my-network -q", returnStdout: true).trim()
-                    if (networkExists.isEmpty()) {
-                        echo 'Creating Docker network: my-network'
-                        sh 'docker network create my-network'
-                    } else {
-                        echo 'Docker network "my-network" already exists.'
-                    }
-                }
+                echo 'Pulling images from Docker Hub...'
+                // Here, we just add echo statement to indicate pulling images
+                // The actual pulling happens in the next stages where containers are run
             }
         }
-        stage('Run MySQL Container') {
+        stage('Run MySQL') {
             steps {
                 script {
-                    // Pull MySQL image and run container
-                    docker.image('junandad/mysql:8.0').run('-d --name mysql ' +
+                    // Pull MySQL image from Docker Hub
+                    def mysql = docker.image('mysql:8.0')
+                    mysql.pull()
+
+                    // Run MySQL container
+                    def mysqlContainer = mysql.run('-d --name mysql ' +
                         '-e MYSQL_ROOT_PASSWORD=root ' +
                         '-e MYSQL_DATABASE=db_bimbelonline ' +
                         '-e MYSQL_USER=mec ' +
-                        '-e MYSQL_PASSWORD=root ' +
-                        '--network=my-network')
+                        '-e MYSQL_PASSWORD=root')
                     echo 'MySQL container is running...'
+
+                    // Wait for MySQL to be ready (simple sleep, adjust as needed)
+                    echo 'Waiting for MySQL to be ready...'
+                    sleep(20) // Wait 20 seconds to allow MySQL to start
                 }
             }
         }
-        stage('Run PHP Container') {
+        stage('Run PHP File') {
             steps {
                 script {
-                    // Pull PHP image and run container
-                    docker.image('junandad/dashboard-mec-php:try').run('-d --name dashboard-mec-php ' +
-                        '-p 8083:80 ' +
-                        '--network=my-network ' +
-                        '-v $WORKSPACE:/var/www/html')
-                    echo 'PHP container is running...'
+                    // Pull PHP environment image from Docker Hub
+                    def phpEnv = docker.image('junandad/dashboard-mec-php')
+                    phpEnv.pull()
+
+                    // Run PHP container and link it to MySQL
+                    def phpContainer = phpEnv.run("-d --name dashboard-mec-php " +
+                        "-e MYSQL_HOST=${MYSQL_HOST} " +
+                        "-e MYSQL_USER=${MYSQL_USER} " +
+                        "-e MYSQL_PASSWORD=${MYSQL_PASSWORD} " +
+                        "-e MYSQL_DB=${MYSQL_DB} " +
+                        "-p 9000:80 " +
+                        "-v $WORKSPACE:/var/www/html")
+                    echo 'PHP environment container is running...'
                 }
             }
         }
     }
     post {
         success {
-            echo 'Pipeline executed successfully!'
+            slackSend channel: '#build-testing', color: 'good', message: 'Pipeline berhasil!'
         }
         failure {
-            echo 'Pipeline execution failed.'
+            slackSend channel: '#build-testing', color: 'danger', message: 'Pipeline gagal!'
         }
     }
 }
