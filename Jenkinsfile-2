@@ -21,20 +21,16 @@ pipeline {
         stage('Run MySQL') {
             steps {
                 script {
-                    // Stop and remove any existing MySQL container with the same name
-                    sh 'docker rm -f mysql || true'
-
                     // Pull MySQL image
                     def mysql = docker.image('mysql:8.0')
                     mysql.pull()
 
-                    // Run MySQL container with unique name and network configuration
+                    // Run MySQL container in detached mode (background)
                     def mysqlContainer = mysql.run('-d --name mysql ' +
                         '-e MYSQL_ROOT_PASSWORD=root ' +
                         '-e MYSQL_DATABASE=db_bimbelonline ' +
                         '-e MYSQL_USER=mec ' +
-                        '-e MYSQL_PASSWORD=root ' +
-                        '--network my-network') // Ensure MySQL and PHP are on the same network
+                        '-e MYSQL_PASSWORD=root')
                     echo 'MySQL container is running...'
 
                     // Wait for MySQL to be ready
@@ -50,14 +46,13 @@ pipeline {
                     def phpEnv = docker.image('junandad/dashboard-mec-php:try')
                     phpEnv.pull()
 
-                    // Run PHP container and link it to MySQL, ensuring it is on the same network
-                    def phpContainer = phpEnv.run('-d --name phpEnv ' +
+                    // Run PHP container in detached mode (background) and link to MySQL
+                    def phpContainer = phpEnv.run('-d --name php-container ' +
                         '-e MYSQL_HOST=${MYSQL_HOST} ' +
                         '-e MYSQL_USER=${MYSQL_USER} ' +
                         '-e MYSQL_PASSWORD=${MYSQL_PASSWORD} ' +
                         '-e MYSQL_DB=${MYSQL_DB} ' +
-                        '-p 6000:80 ' +
-                        '--network my-network ' +
+                        '-p 9000:80 ' +
                         '-w /var/www/html') // Ensure the PHP container has the correct working directory
                     echo 'PHP environment container is running...'
                 }
