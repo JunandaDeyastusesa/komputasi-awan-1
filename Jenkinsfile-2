@@ -17,7 +17,7 @@ pipeline {
             steps {
                 script {
                     // Pull MySQL image and run container
-                    docker.image('junandad/mysql:8.0').run('-d --name mysql_db ' +
+                    docker.image('junandad/mysql:8.0').run('-d --name mysql ' +
                         '-e MYSQL_ROOT_PASSWORD=root ' +
                         '-e MYSQL_DATABASE=db_bimbelonline ' +
                         '-e MYSQL_USER=mec ' +
@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     // Pull PHP image and run container
-                    docker.image('junandad/dashboard-mec-php:try').run('-d --name php_app ' +
+                    docker.image('junandad/dashboard-mec-php:try').run('-d --name dashboard-mec-php ' +
                         '-p 8083:80 ' +
                         '--network=my-network ' +
                         '-v $WORKSPACE:/var/www/html')
