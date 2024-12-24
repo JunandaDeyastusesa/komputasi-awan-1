@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <table>
                     <thead>
                         <tr>
-                            <th>No</th>
+                            <th>No Pembayaran</th>
                             <th>ID Bayar</th>
                             <th>Tanggal</th>
                             <th>Nama Siswa</th>
